@@ -1,90 +1,101 @@
+#ライブラリのインポート
 import tkinter as tk
-from tkinter import ttk
+from tkinter import Frame, Label, ttk
 
-buttonList = [
-    ['', 'B', 'C', '/'],
+LAYOUT = [
+    ['', 'C', 'AC', '/'],
     ['7', '8', '9', '*'],
     ['4', '5', '6', '-'],
     ['1', '2', '3', '+'],
-    ['00', '0', '.', '=']
+    ['0', '00', '.', '=']
 ]
 
-operators = ['+', '-', '*', '/']
-numbers = ['1','2','3','4','5','6','7','8','9','0']
+calc_SYMBOL = ['+', '-', '*', '/']  #数字以外の記号をまとめて定義しておく
+numbers = ['1','2','3','4','5','6','7','8','9','0'] #いらない?
 
-class calculator(object):
-    def __init__(self, app=None):
-        # Define
-        self.calcStr = '' # 計算用の文字列
+class calculator(ttk.Frame):
+    def __init__(self, master=None):
+        self.calc_str = '' # 計算用の文字列
+    #     self.createStyle()
+
+    # def createStyle(self):
+    #   style = ttk.Style()
+    #   style.configure('TLabel', font=('Helvetica', 20), background='black', foreground='white')
 
         # MainWindowを作成
-        app.title('でんたく') # Window のタイトル
-        app.geometry('300x470') # Window のサイズ
-        # app.configure(bg='#ffffff')
+        master.title('けーさんき')
+        master.geometry('300x470') # MainWindow のサイズを設定する（geometry）
+        # app.configure(bg='black')
 
 
-        # 電卓のFrameを作成
-        mainFrame = ttk.Frame(app, width=300, height=50) # 計算式と結果用のFrame
-        mainFrame.propagate(False) # サイズが固定される
-        mainFrame.pack(side=tk.TOP, padx=10, pady=20) # 余白の設定
-        #計算ボタンのFrameを作成
-        buttonFrame = ttk.Frame(app, width=300, height=400) # 計算ボタン用のFrame
-        buttonFrame.propagate(False) # サイズが固定される
-        buttonFrame.pack(side=tk.BOTTOM) # 余白の設定
+        # Frameを作成
+        main_frame = ttk.Frame(master, width=300, height=50) # ディスプレイのFrame
+        main_frame.propagate(False) #レスポンシブなし
+        button_frame = ttk.Frame(master, width=300, height=400) # 計算ボタン用のFrame
+        button_frame.propagate(False) #レスポンシブなし
 
-        # Labelを配置
-        self.calcVar = tk.StringVar() # 計算式用の動的変数
-        self.answerVar = tk.StringVar() # 結果用の動的変数
-        calcLabel = tk.Label(mainFrame, textvariable=self.calcVar, font=("",15)) # 計算式のLabel
-        resultLabel = tk.Label(mainFrame, textvariable=self.answerVar, font=("",20)) # 計算結果のLabel
-        calcLabel.pack(anchor=tk.E) # 右揃えで配置
-        resultLabel.pack(anchor=tk.E) # 右揃えで配置
+        #作成したFrameを配置（pack）
+        main_frame.pack(side=tk.TOP, padx=10, pady=20) #padxはWidget外側の横余白　padyはWidget外側の縦余白
+        button_frame.pack(side=tk.BOTTOM)
 
-        #Buttonを配置
-        for y, row in enumerate(buttonList, 1): 
+
+
+        #Buttonを配置 LAYOUTからforループで取り出して配置していく
+        for y, row in enumerate(LAYOUT, 1): 
             for x, num in enumerate(row):
-                button = tk.Button(buttonFrame, text=num, font=('', 15), width=6, height=3)
-                button.grid(row=y, column=x) # 列や行を指定して配置
-                button.bind('<Button-1>', self.clickButton) # Buttonが押された場合
+                button = tk.Button(button_frame, text=num, font=('', 15), width=6, height=3)
+                button['bg'] = '#161666'
+                button['fg'] = '#ffffff'
+                button.grid(row=y, column=x)
+                button.bind('<1>', self.press_button) 
 
-        button['fg'] = '#FF4500'
+        button['bg'] = '#86b8eb' #要修正
+        button['fg'] = 'black'
+
+        # 計算式と計算結果の表示用Labelを作成、配置
+        self.calc_var = tk.StringVar() # 計算式を格納する変数
+        self.answer_var = tk.StringVar() # 結果を格納する変数
+        self.answer_var.set('0') #計算結果の初期値を設定する
+        calc_label = tk.Label(main_frame, textvariable=self.calc_var, font=("",15)) # 計算式のLabel
+        result_label = tk.Label(main_frame, textvariable=self.answer_var, font=("",22)) # 計算結果のLabel
+        calc_label.pack(anchor="e") #eはeast　つまり右寄せ
+        result_label.pack(anchor="e")
 
 
     #Buttonが押下された時の処理を定義する
-    def clickButton(self, event):
+    def press_button(self, event):
         check = event.widget['text'] # 押したボタンのCheck
 
         if check == '=':
-            if self.calcStr[-1:] in operators: # SYMBOLが押下された場合、SYMBOLの手前を計算
-                self.calcStr = self.calcStr[:-1]
+            if self.calc_str[-1:] in calc_SYMBOL:
+                self.calc_str = self.calc_str[:-1]
 
-            res = '= ' + str(eval(self.calcStr)) #計算処理
-            self.answerVar.set(res)
-        elif check == 'B': # 一個もどす
-            self.calcStr = self.calcStr[:-1]
-        elif check == 'C': # 全部消去
-            self.calcStr = ''
-            self.answerVar.set('')
-        elif check in operators: # 記号の場合
-            if self.calcStr[-1:] not in operators and self.calcStr[-1:] != '':
-                self.calcStr += check
-            elif self.calcStr[-1:] in operators: # 記号の場合、入れ替える
-                self.calcStr = self.calcStr[:-1] + check
-        else: # 数字などの場合
-            self.calcStr += check
+            res = '= ' + str(eval(self.calc_str)) #計算処理
+            self.answer_var.set(res)
+        elif check == 'C': # backspace
+            self.calc_str = self.calc_str[:-1]
+        elif check == 'AC': # clear
+            self.calc_str = ''
+            self.answer_var.set('')
+            self.answer_var.set('0')
 
-        self.calcVar.set(self.calcStr)
+        elif check in calc_SYMBOL: # 記号の場合
+            if self.calc_str[-1:] not in calc_SYMBOL and self.calc_str[-1:] != '':
+                self.calc_str += check
+            elif self.calc_str[-1:] in calc_SYMBOL:
+                self.calc_str = self.calc_str[:-1] + check
+        else:
+            self.calc_str += check
+
+        self.calc_var.set(self.calc_str)
     
 
 
 def main():
-    # Window Setting
     app = tk.Tk()
-    # Window size non resizable
-    app.resizable(width=False, height=False)
+    app.resizable(width=False, height=False) #Windowを固定サイズにする
     calculator(app)
-    # Display
-    app.mainloop() # Window をループで回すことで Widgit に対応できるようになる
+    app.mainloop()
 
 if __name__ == '__main__':
     main()
